@@ -1,31 +1,7 @@
 import { Jikan } from 'node-myanimelist'
 import { findBestMatch } from 'string-similarity'
-import { JikanAnimeResult, WebhookEvent, WebhookPayload } from './types'
-import fetch from 'node-fetch'
-
-function getTVDBLink(showId: string): string {
-  return `https://api.thetvdb.com/series/${showId}/episodes`
-}
-
-async function getTVDBEpisodeName(showId: string, episodeId: string): Promise<string> {
-  const response = await fetch(getTVDBLink(showId))
-  const { data } = await response.json()
-  return data[Number(episodeId) - 1].episodeName
-}
-
-interface TVDBData {
-  id: string
-  episode: string
-}
-
-function parseGuidString(guid: string): TVDBData {
-  const slashSplit = guid.split('/')
-  const questionMarkSplit = slashSplit[4].split('?')
-  return {
-    id: slashSplit[2],
-    episode: questionMarkSplit[0]
-  }
-}
+import { JikanAnimeResult, WebhookEvent, WebhookPayload } from 'types'
+import { getTVDBEpisodeName, parseGuidString } from 'utils/tvdb'
 
 interface AnimeResult {
   malId: number

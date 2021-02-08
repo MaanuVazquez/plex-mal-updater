@@ -1,6 +1,12 @@
 import express from 'express'
 import multer from 'multer'
-import webhookHandler from './webhookHandler'
+import webhookHandler from 'controllers/webhook-handler'
+import dotenv from 'dotenv'
+import { getLoginURI } from 'utils/token'
+import { authenticateUser, refreshUserToken } from 'controllers/oauth'
+import { CronJob } from 'cron'
+
+dotenv.config()
 
 const app = express()
 const upload = multer({
@@ -9,8 +15,19 @@ const upload = multer({
 
 const PORT = 3000 || process.env.PORT
 
-app.get('/', (_, res) => {
-  res.send('Hello World!')
+app.get('/oauth', async (_, res) => {
+  res.redirect(getLoginURI())
+})
+
+app.get('/oauthredirect', (req, res) => {
+  const { code } = req.query
+  if (!code) return
+  authenticateUser(code as string)
+  res
+    .json({
+      message: 'success'
+    })
+    .status(200)
 })
 
 app.post('/', upload.single('thumb'), (req, res) => {
@@ -21,3 +38,5 @@ app.post('/', upload.single('thumb'), (req, res) => {
 app.listen(PORT, () => {
   console.log("Hey! we're running on port", PORT)
 })
+
+new CronJob('* 0 * * * *', refreshUserToken).start()
