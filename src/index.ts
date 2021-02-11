@@ -2,21 +2,24 @@ import express from 'express'
 import multer from 'multer'
 import webhookHandler from 'controllers/webhook-handler'
 import dotenv from 'dotenv'
-import { getLoginURI } from 'utils/token'
+import { getLoginURI } from 'api/mal'
 import { authenticateUser, refreshUserToken } from 'controllers/oauth'
 import { CronJob } from 'cron'
+import DBConnect from 'db'
+import { processRemainingUpdates } from 'controllers/media'
 
 dotenv.config()
+DBConnect()
 
 const app = express()
 const upload = multer({
   dest: '/tmp/'
 })
 
-const PORT = 3000 || process.env.PORT
+const PORT = process.env.PORT || 3000
 
-app.get('/oauth', async (_, res) => {
-  res.redirect(getLoginURI())
+app.get('/oauth', async (req, res) => {
+  res.redirect(getLoginURI(`${req.protocol}://${req.get('host')}/oauthredirect`))
 })
 
 app.get('/oauthredirect', (req, res) => {
@@ -40,3 +43,4 @@ app.listen(PORT, () => {
 })
 
 new CronJob('* 0 * * * *', refreshUserToken).start()
+new CronJob('* 0 0 * * *', processRemainingUpdates).start()

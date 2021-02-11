@@ -14,60 +14,46 @@ export enum WebhookEvent {
   PLAYBACK_STARTED = 'playback.started' // – Playback is started by a shared user for the server. A poster is also attached to this event.
 }
 
-export interface WebhookPayload {
-  event: WebhookEvent
-  Metadata: {
-    librarySectionType: string
-    ratingKey: string
-    key: string
-    skipParent: boolean
-    parentRatingKey: string
-    grandparentRatingKey: string
-    guid: string
-    parentGuid: string
-    grandparentGuid: string
-    type: string
-    title: string
-    titleSort: string
-    grandparentKey: string
-    parentKey: string
-    librarySectionTitle: string
-    librarySectionID: number
-    librarySectionKey: string
-    grandparentTitle: string
-    parentTitle: string
-    contentRating: string
-    summary: string
-    index: number
-    parentIndex: number
-    viewOffset: number
-    viewCount: number
-    lastViewedAt: number
-    year: number
-    thumb: string
-    art: string
-    parentThumb: string
-    grandparentThumb: string
-    grandparentArt: string
-    grandparentTheme: string
-    originallyAvailableAt: string
-    addedAt: number
-    updatedAt: number
-  }
+export interface WebhookMetadata {
+  librarySectionType: string
+  ratingKey: string
+  key: string
+  skipParent: boolean
+  parentRatingKey: string
+  grandparentRatingKey: string
+  guid: string
+  parentGuid: string
+  grandparentGuid: string
+  type: string
+  title: string
+  titleSort: string
+  grandparentKey: string
+  parentKey: string
+  librarySectionTitle: string
+  librarySectionID: number
+  librarySectionKey: string
+  grandparentTitle: string
+  parentTitle: string
+  contentRating: string
+  summary: string
+  index: number
+  parentIndex: number
+  viewOffset: number
+  viewCount: number
+  lastViewedAt: number
+  year: number
+  thumb: string
+  art: string
+  parentThumb: string
+  grandparentThumb: string
+  grandparentArt: string
+  grandparentTheme: string
+  originallyAvailableAt: string
+  addedAt: number
+  updatedAt: number
 }
 
-export interface JikanAnimeResult {
-  mal_id: number
-  url: string
-  image_url: string
-  title: string
-  airing: boolean
-  synopsis: string
-  type: string
-  episodes: number
-  score: number
-  start_date: string
-  end_date: string
-  members: number
-  rated: string
+export interface WebhookPayload {
+  event: WebhookEvent
+  Metadata: WebhookMetadata
 }

@@ -1,33 +1,19 @@
-import fetch from 'node-fetch'
-import { getAuthParams, getRefreshParams, setStoredCredentials } from 'utils/token'
-import constants from 'constants/urls'
+import { authenticate, refreshToken } from 'api/mal'
+import { getStoredCredentials, setStoredCredentials } from 'utils/token'
 
 export async function authenticateUser(code: string): Promise<void> {
-  const body = getAuthParams(code)
+  const tokens = await authenticate(code)
 
-  if (!body) return
-
-  const response = await fetch(constants.OAUTH_URL, {
-    method: 'POST',
-    body
-  })
-
-  const data = await response.json()
-
-  setStoredCredentials(data)
+  if (!tokens) return
+  setStoredCredentials(tokens)
 }
 
 export async function refreshUserToken(): Promise<void> {
-  const body = getRefreshParams()
+  const tokenParams = await getStoredCredentials()
 
-  if (!body) return
+  const refreshedParams = await refreshToken(tokenParams)
 
-  const response = await fetch(constants.OAUTH_URL, {
-    method: 'POST',
-    body
-  })
+  if (!refreshedParams) return
 
-  const data = await response.json()
-
-  setStoredCredentials(data)
+  setStoredCredentials(refreshedParams)
 }

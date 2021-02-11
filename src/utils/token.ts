@@ -1,5 +1,4 @@
-import { URLSearchParams } from 'url'
-import { generatePKCE, getCurrentPKCE } from 'utils/pkce'
+import { Token } from 'db/models'
 
 export interface TokenParams {
   tokenType: string
@@ -17,63 +16,46 @@ export interface TokenParamsRaw {
 
 let storedCredentials: TokenParams | null = null
 
-export function setStoredCredentials({ access_token, token_type, expires_in, refresh_token }: TokenParamsRaw): void {
+export async function setStoredCredentials({
+  access_token,
+  token_type,
+  expires_in,
+  refresh_token
+}: TokenParamsRaw): Promise<void> {
   storedCredentials = {
     accessToken: access_token,
     tokenType: token_type,
     refreshToken: refresh_token,
     expiresIn: new Date(Date.now() + expires_in).getTime()
   }
+
+  const tokens = await Token.find()
+
+  const token = tokens.length ? tokens[0] : new Token()
+
+  Object.entries(storedCredentials).forEach(([key, value]) => {
+    // eslint-disable-next-line
+    // @ts-ignore
+    token[key] = value
+  })
+
+  token.save()
 }
 
-export function getStoredCredentials(): TokenParams | null {
+export async function getStoredCredentials(): Promise<TokenParams | null> {
+  if (storedCredentials) return storedCredentials
+
+  const token = await Token.find()
+
+  if (token.length) {
+    const { accessToken, tokenType, refreshToken, expiresIn } = token[0]
+    storedCredentials = {
+      accessToken: accessToken,
+      tokenType: tokenType,
+      refreshToken: refreshToken,
+      expiresIn: expiresIn
+    }
+  }
+
   return storedCredentials
-}
-
-const MAL_LINK = 'https://myanimelist.net/v1/oauth2/authorize'
-const SERVER_REDIRECT = 'http://localhost:3000/oauthredirect'
-
-export function getLoginURI(): string {
-  const { code_challenge } = generatePKCE(128)
-
-  const url = new URL(MAL_LINK)
-
-  url.searchParams.append('response_type', 'code')
-  url.searchParams.append('client_id', process.env.MAL_CLIENT_ID as string)
-  url.searchParams.append('state', 'asd')
-  url.searchParams.append('redirect_uri', SERVER_REDIRECT)
-  url.searchParams.append('code_challenge', code_challenge)
-  url.searchParams.append('code_challenge_method', 'plain')
-
-  return url.href
-}
-
-export function getAuthParams(code: string): URLSearchParams | null {
-  const pkce = getCurrentPKCE()
-
-  if (!pkce) return null
-
-  const { code_challenge } = pkce
-
-  const body = new URLSearchParams()
-  body.append('client_id', process.env.MAL_CLIENT_ID as string)
-  body.append('grant_type', 'authorization_code')
-  body.append('code', code)
-  body.append('code_verifier', code_challenge)
-  body.append('redirect_uri', SERVER_REDIRECT)
-
-  return body
-}
-
-export function getRefreshParams(): URLSearchParams | null {
-  const credentials = getStoredCredentials()
-
-  if (!credentials) return null
-
-  const body = new URLSearchParams()
-  body.append('client_id', process.env.MAL_CLIENT_ID as string)
-  body.append('grant_type', 'refresh_token')
-  body.append('refresh_token', credentials.refreshToken)
-
-  return body
 }
