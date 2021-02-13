@@ -7,7 +7,8 @@ import { logError, logInfo } from 'utils/log'
 const API_URIS = {
   TOKEN: 'https://myanimelist.net/v1/oauth2/token',
   AUTHORIZE: 'https://myanimelist.net/v1/oauth2/authorize',
-  UPDATE_LIST: (malId: string): string => `https://api.myanimelist.net/v2/anime/${malId}/my_list_status`
+  UPDATE_LIST: (malId: string): string => `https://api.myanimelist.net/v2/anime/${malId}/my_list_status`,
+  ANIME_LIST: 'https://api.myanimelist.net/v2/users/@me/animelist?fields=list_status&limit=1000'
 }
 
 export function getLoginURI(redirectURI: string): string {
@@ -113,4 +114,50 @@ export async function updateList(accessToken: string, { malId, ...rest }: Update
   })
 
   return response.json()
+}
+
+export interface AnimePiece {
+  status: AnimeListStatus
+  score: number
+  num_episodes_watched: number
+  is_rewatching: boolean
+  updated_at: string
+}
+
+export interface AnimeList {
+  [key: number]: AnimePiece
+}
+
+export interface AnimeListRaw {
+  node: {
+    id: number
+    title: string
+  }
+  list_status: AnimePiece
+}
+
+async function fetchAnimeList(accessToken: string, uri: string = API_URIS.ANIME_LIST): Promise<AnimeListRaw[]> {
+  const response = await fetch(uri, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  })
+
+  const { paging, data } = await response.json()
+  if (!data || !paging) return []
+  if (!paging.next) return data
+
+  return [...data, fetchAnimeList(accessToken, paging.next)]
+}
+
+export async function getAnimeList(accessToken: string): Promise<AnimeList> {
+  const animeListRaw = await fetchAnimeList(accessToken)
+  return animeListRaw.reduce(
+    (accum: AnimeList, { node, list_status }: AnimeListRaw) => ({
+      ...accum,
+      [node.id]: list_status
+    }),
+    {} as AnimeList
+  )
 }

@@ -1,14 +1,12 @@
 import express from 'express'
 import multer from 'multer'
-import webhookHandler from 'controllers/webhook-handler'
-import dotenv from 'dotenv'
-import { getLoginURI } from 'api/mal'
-import { authenticateUser, refreshUserToken } from 'controllers/oauth'
 import { CronJob } from 'cron'
 import DBConnect from 'db'
+import webhookHandler from 'controllers/webhook-handler'
+import { authenticateUser, refreshUserToken } from 'controllers/oauth'
 import { processRemainingUpdates } from 'controllers/media'
+import { getLoginURI } from 'api/mal'
 
-dotenv.config()
 DBConnect()
 
 const app = express()
@@ -42,5 +40,5 @@ app.listen(PORT, () => {
   console.log("Hey! we're running on port", PORT)
 })
 
-new CronJob('* 0 * * * *', refreshUserToken).start()
-new CronJob('* 0 0 * * *', processRemainingUpdates).start()
+new CronJob('0 0 * * * *', refreshUserToken).start()
+new CronJob('0 0 0 * * *', processRemainingUpdates).start()

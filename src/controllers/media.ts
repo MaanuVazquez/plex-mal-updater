@@ -2,7 +2,7 @@ import { Jikan } from 'node-myanimelist'
 import { findBestMatch } from 'string-similarity'
 import { getTVDBEpisodeName } from 'api/tvdb'
 import { getStoredCredentials } from 'utils/token'
-import { AnimeListStatus, updateList } from 'api/mal'
+import { AnimeListStatus, getAnimeList, updateList } from 'api/mal'
 import { RemainingUpdate } from 'db/models'
 import { logError, logInfo } from 'utils/log'
 
@@ -25,18 +25,11 @@ export interface JikanAnimeResult {
 export interface AnimeResult {
   malId: number
   episodeNumber: number
-  isLast: boolean
+  airing: boolean
+  totalEpisodes: number
 }
 
-export interface EpisodeData {
-  id: string
-  name: string
-}
-
-export async function detectAnimeByTitleAndEpisode(
-  title: string,
-  { id, name }: EpisodeData
-): Promise<AnimeResult | void> {
+export async function detectAnimeByTitleAndEpisode(title: string, name: string): Promise<AnimeResult | void> {
   let animeResult
 
   const jikanResult = await Jikan.search().anime({
@@ -56,12 +49,11 @@ export async function detectAnimeByTitleAndEpisode(
       const match = findBestMatch(name.toLowerCase(), episodesTitle)
 
       if (match.bestMatch.rating >= 0.6) {
-        const episodeNumber = Number(id)
-
         animeResult = {
           malId: anime.mal_id,
-          episodeNumber,
-          isLast: !anime.airing && anime.episodes === episodeNumber
+          episodeNumber: match.bestMatchIndex,
+          airing: anime.airing,
+          totalEpisodes: anime.episodes
         }
 
         break
@@ -93,13 +85,53 @@ export async function addRemainingUpdate(tvdbId: string, episode: string, showTi
   remainingUpdate.save()
 }
 
+interface SyncMalParams {
+  tvdbId: string
+  malId: number
+  accessToken: string
+  currentEpisodeNumber: number
+  showTitle: string
+  airing: boolean
+  totalEpisodes: number
+}
+
+async function syncToMAL({
+  malId,
+  accessToken,
+  tvdbId,
+  currentEpisodeNumber,
+  showTitle,
+  airing,
+  totalEpisodes
+}: SyncMalParams): Promise<void> {
+  const remainingUpdate = await RemainingUpdate.findOne({ tvdbId })
+  const episodeToUpload =
+    remainingUpdate && remainingUpdate.episode > currentEpisodeNumber ? remainingUpdate.episode : currentEpisodeNumber
+  const { [malId]: animeOnList } = await getAnimeList(accessToken)
+
+  if (
+    animeOnList &&
+    (animeOnList.status === AnimeListStatus.COMPLETED || animeOnList.num_episodes_watched >= episodeToUpload)
+  ) {
+    await remainingUpdate?.remove()
+    return
+  }
+
+  const isLast = !airing && episodeToUpload === totalEpisodes
+
+  await updateList(accessToken, {
+    malId: malId.toString(),
+    num_watched_episodes: episodeToUpload,
+    status: isLast ? AnimeListStatus.COMPLETED : AnimeListStatus.WATCHING
+  })
+  await remainingUpdate?.remove()
+  logInfo('[MAL][LIST_UPDATE]', tvdbId, showTitle, episodeToUpload.toString(), 'success')
+}
+
 export async function updateListFromTVDB(tvdbId: string, episode: string, showTitle: string): Promise<boolean> {
   try {
     const episodeName = await getTVDBEpisodeName(tvdbId, episode)
-    const animedDetected = await detectAnimeByTitleAndEpisode(showTitle, {
-      id: episode,
-      name: episodeName
-    })
+    const animedDetected = await detectAnimeByTitleAndEpisode(showTitle, episodeName)
 
     if (!animedDetected) throw Error('Anime not found in MAL')
 
@@ -107,15 +139,18 @@ export async function updateListFromTVDB(tvdbId: string, episode: string, showTi
 
     if (!credentials) throw Error('Not logged in MAL')
 
-    const { episodeNumber, isLast, malId } = animedDetected
+    const { episodeNumber, airing, malId, totalEpisodes } = animedDetected
     const { accessToken } = credentials
 
-    await updateList(accessToken, {
-      malId: malId.toString(),
-      num_watched_episodes: episodeNumber,
-      status: isLast ? AnimeListStatus.COMPLETED : AnimeListStatus.WATCHING
+    await syncToMAL({
+      accessToken,
+      currentEpisodeNumber: episodeNumber,
+      airing,
+      malId,
+      tvdbId,
+      showTitle,
+      totalEpisodes
     })
-    logInfo('[MAL][LIST_UPDATE]', tvdbId, showTitle, episode, 'success')
     return true
   } catch (error) {
     logError('[MAL][LIST_UPDATE]', error.message)
