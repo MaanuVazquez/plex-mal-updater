@@ -26,7 +26,7 @@ export function getLoginURI(redirectURI: string): string {
   return url.href
 }
 
-export async function authenticate(code: string): Promise<TokenParamsRaw | null> {
+export async function authenticate(code: string, redirectURI: string): Promise<TokenParamsRaw | null> {
   const pkce = getCurrentPKCE()
 
   if (!pkce) return null
@@ -38,7 +38,7 @@ export async function authenticate(code: string): Promise<TokenParamsRaw | null>
   body.append('grant_type', 'authorization_code')
   body.append('code', code)
   body.append('code_verifier', code_challenge)
-  body.append('redirect_uri', process.env.OAUTH_REDIRECT_URL)
+  body.append('redirect_uri', redirectURI)
 
   try {
     const response = await fetch(API_URIS.TOKEN, {

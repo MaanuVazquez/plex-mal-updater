@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Request } from 'express'
 import multer from 'multer'
 import { CronJob } from 'cron'
 import DBConnect from 'db'
@@ -16,14 +16,18 @@ const upload = multer({
 
 const PORT = process.env.PORT || 3000
 
+function getOAuthRedirectURI(req: Request): string {
+  return `${req.protocol}://${req.get('host')}/oauthredirect`
+}
+
 app.get('/oauth', async (req, res) => {
-  res.redirect(getLoginURI(`${req.protocol}://${req.get('host')}/oauthredirect`))
+  res.redirect(getLoginURI(getOAuthRedirectURI(req)))
 })
 
 app.get('/oauthredirect', (req, res) => {
   const { code } = req.query
   if (!code) return
-  authenticateUser(code as string)
+  authenticateUser(code as string, getOAuthRedirectURI(req))
   res
     .json({
       message: 'success'
