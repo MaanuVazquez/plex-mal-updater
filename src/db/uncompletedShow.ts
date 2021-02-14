@@ -1,6 +1,7 @@
 import { UncompletedShow, UncompletedShowEpisode } from 'db/models'
 import { IUncompletedShowEpisode } from 'db/models/uncompletedShowEpisode'
 import { IUncompletedShow } from './models/uncompletedShow'
+import { getDate } from 'utils'
 
 export async function addUncompletedShowEpisode(
   tvdbId: string,
@@ -26,6 +27,7 @@ export async function addUncompletedShowEpisode(
 
   uncompletedShowEpisode.tvdbId = tvdbId
   uncompletedShowEpisode.tvdbEpisodeNumber = episode
+  uncompletedShowEpisode.viewDate = getDate()
 
   return uncompletedShowEpisode.save()
 }
@@ -39,10 +41,10 @@ export async function getUncompletedTVEpisodes(tvdbId: string): Promise<IUncompl
 }
 
 export async function removeShow(tvdbId: string): Promise<void> {
-  await UncompletedShowEpisode.remove({ tvdbId })
-  await UncompletedShow.remove({ tvdbId })
+  await UncompletedShowEpisode.deleteMany({ tvdbId })
+  await UncompletedShow.deleteOne({ tvdbId })
 }
 
 export async function removeShowEpisode(tvdbId: string, tvdbEpisodeNumber: number): Promise<void> {
-  await UncompletedShowEpisode.remove({ tvdbId, tvdbEpisodeNumber })
+  await UncompletedShowEpisode.deleteOne({ tvdbId, tvdbEpisodeNumber })
 }

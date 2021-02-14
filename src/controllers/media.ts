@@ -40,7 +40,7 @@ async function matchAnimeEpisodes(malId: number, episodeName: string): Promise<n
 
   if (match.bestMatch.rating < 0.6) return null
 
-  return match.bestMatchIndex
+  return episodes[match.bestMatchIndex].episode_id
 }
 
 export interface AnimeResult {
