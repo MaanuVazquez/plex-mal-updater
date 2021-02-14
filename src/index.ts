@@ -4,7 +4,7 @@ import { CronJob } from 'cron'
 import DBConnect from 'db'
 import webhookHandler from 'controllers/webhook-handler'
 import { authenticateUser, refreshUserToken } from 'controllers/oauth'
-import { processRemainingUpdates } from 'controllers/media'
+import { processUncompletedShows } from 'controllers/media'
 import { getLoginURI } from 'api/mal'
 import { getOAuthRedirectURI } from 'utils'
 
@@ -42,4 +42,4 @@ app.listen(PORT, () => {
 })
 
 new CronJob('0 0 * * * *', refreshUserToken).start()
-new CronJob('0 0 0 * * *', processRemainingUpdates).start()
+new CronJob('0 0 0 * * *', processUncompletedShows).start()

@@ -1,11 +1,11 @@
-export function logInfo(...info: string[]): void {
+export function logInfo(...info: unknown[]): void {
   console.info(info.join(' '))
 }
 
-export function logError(...errors: string[]): void {
+export function logError(...errors: unknown[]): void {
   console.error(errors.join(' '))
 }
 
-export function logWarning(...warnings: string[]): void {
+export function logWarning(...warnings: unknown[]): void {
   console.warn(warnings.join(' '))
 }
