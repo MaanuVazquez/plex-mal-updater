@@ -4,9 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "yarn clean && tsc",
     "start": "node -r dotenv/config -r ./tsconfig-paths-bootstrap.js dist/index.js",
     "dev": "nodemon --config nodemon.json src/index.ts",
+    "clean": "node scripts/clean.js",
     "postinstall": "yarn build"
   },
   "dependencies": {
