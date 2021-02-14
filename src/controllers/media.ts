@@ -99,23 +99,11 @@ async function syncToMAL({ mal, accessToken, tvdb, viewDate }: SyncMalParams): P
 
   const isLast = !mal.airing && mal.episodeNumber === mal.totalEpisodes
   const isFirst = mal.episodeNumber === 1
-  let status = AnimeListStatus.WATCHING
-
-  const dates: { [key: string]: string } = {}
-
-  if (isFirst) {
-    dates.finish_date = getDate()
-  }
-
-  if (isLast) {
-    status = AnimeListStatus.COMPLETED
-    dates.start_date = getDate()
-  }
 
   await updateList(accessToken, {
     malId: mal.id.toString(),
     num_watched_episodes: mal.episodeNumber,
-    status,
+    status: isLast ? AnimeListStatus.COMPLETED : AnimeListStatus.WATCHING,
     ...(isFirst ? { start_date: viewDate || getDate() } : null),
     ...(isLast ? { finish_date: viewDate || getDate() } : null)
   })
