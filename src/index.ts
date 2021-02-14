@@ -1,4 +1,4 @@
-import express, { Request } from 'express'
+import express from 'express'
 import multer from 'multer'
 import { CronJob } from 'cron'
 import DBConnect from 'db'
@@ -6,6 +6,7 @@ import webhookHandler from 'controllers/webhook-handler'
 import { authenticateUser, refreshUserToken } from 'controllers/oauth'
 import { processRemainingUpdates } from 'controllers/media'
 import { getLoginURI } from 'api/mal'
+import { getOAuthRedirectURI } from 'utils'
 
 DBConnect()
 
@@ -15,10 +16,6 @@ const upload = multer({
 })
 
 const PORT = process.env.PORT || 3000
-
-function getOAuthRedirectURI(req: Request): string {
-  return `${req.protocol}://${req.get('host')}/oauthredirect`
-}
 
 app.get('/oauth', async (req, res) => {
   res.redirect(getLoginURI(getOAuthRedirectURI(req)))

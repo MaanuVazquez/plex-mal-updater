@@ -96,6 +96,8 @@ export interface UpdateListParams {
   rewatch_value?: number // 0-5
   tags?: string
   comments?: string
+  start_date?: string
+  finish_date?: string
 }
 
 export async function updateList(accessToken: string, { malId, ...rest }: UpdateListParams): Promise<void> {

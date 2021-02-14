@@ -5,6 +5,7 @@ import { getStoredCredentials } from 'utils/token'
 import { AnimeListStatus, getAnimeList, updateList } from 'api/mal'
 import { RemainingUpdate } from 'db/models'
 import { logError, logInfo } from 'utils/log'
+import { getDate } from 'utils'
 
 export interface JikanAnimeResult {
   mal_id: number
@@ -118,11 +119,25 @@ async function syncToMAL({
   }
 
   const isLast = !airing && episodeToUpload === totalEpisodes
+  const isFirst = episodeToUpload === 1
+  let status = AnimeListStatus.WATCHING
+
+  const dates: { [key: string]: string } = {}
+
+  if (isFirst) {
+    dates.finish_date = getDate()
+  }
+
+  if (isLast) {
+    status = AnimeListStatus.COMPLETED
+    dates.start_date = getDate()
+  }
 
   await updateList(accessToken, {
     malId: malId.toString(),
     num_watched_episodes: episodeToUpload,
-    status: isLast ? AnimeListStatus.COMPLETED : AnimeListStatus.WATCHING
+    status,
+    ...dates
   })
   await remainingUpdate?.remove()
   logInfo('[MAL][LIST_UPDATE]', tvdbId, showTitle, episodeToUpload.toString(), 'success')
