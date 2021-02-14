@@ -155,7 +155,7 @@ export async function updateListFromTVDB(
     })
   } catch (error) {
     logError('[MAL][LIST_UPDATE]', error.message)
-    addUncompletedShowEpisode(tvdbId, tvdbEpisodeNumber, showTitle)
+    await addUncompletedShowEpisode(tvdbId, tvdbEpisodeNumber, showTitle)
   }
 }
 
