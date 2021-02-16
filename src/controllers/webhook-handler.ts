@@ -4,27 +4,27 @@ import { updateListFromTVDB } from 'controllers/media'
 import { logInfo } from 'utils/log'
 import { parseGuidString } from 'utils/media'
 import { addUncompletedShowEpisode } from 'db/uncompletedShow'
+import { plexLibraryIsValid } from 'utils'
 
-let currentShow: string | null = null
+let currentWorkingShow: string | null = null
 
 export default async function ({ Metadata, event }: WebhookPayload): Promise<void> {
-  if (event !== WebhookEvent.MEDIA_SCROBBLE) return
+  if (event !== WebhookEvent.MEDIA_SCROBBLE || !plexLibraryIsValid(Metadata.librarySectionTitle)) return
 
   const { id, episode } = parseGuidString(Metadata.guid)
 
-  if (currentShow) {
-    if (currentShow === Metadata.guid) return
+  if (currentWorkingShow) {
+    if (currentWorkingShow === Metadata.guid) return
 
     addUncompletedShowEpisode(id, Number(episode), Metadata.grandparentTitle)
-
     return
   }
 
   logInfo('[WEBHOOK][RECEIVED]', getMediaInfoFromWebhook(Metadata))
 
-  currentShow = Metadata.guid
+  currentWorkingShow = Metadata.guid
 
   await updateListFromTVDB(id, episode, Metadata.grandparentTitle)
 
-  currentShow = null
+  currentWorkingShow = null
 }

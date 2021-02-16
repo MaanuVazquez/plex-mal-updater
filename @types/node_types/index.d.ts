@@ -4,5 +4,6 @@ declare namespace NodeJS {
     PORT: string
     MAL_CLIENT_ID: string
     MONGO_DB_URI: string
+    PLEX_SECTION_TITLE: string
   }
 }

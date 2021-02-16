@@ -12,3 +12,10 @@ export function getDate(): string {
 export function getOAuthRedirectURI(req: Request): string {
   return `${req.protocol}://${req.get('host')}/oauthredirect`
 }
+
+export function plexLibraryIsValid(libraryTitle: string): boolean {
+  if (!process.env.PLEX_SECTION_TITLE) return true
+
+  const libraries = process.env.PLEX_SECTION_TITLE.toLowerCase().split(', ')
+  return libraries.includes(libraryTitle.toLowerCase())
+}

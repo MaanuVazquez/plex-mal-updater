@@ -19,7 +19,7 @@ export async function addUncompletedShowEpisode(
     newUncompletedShow.save()
   }
 
-  const episodeExists = await UncompletedShowEpisode.findOne({ tvdbId, episode })
+  const episodeExists = await UncompletedShowEpisode.findOne({ tvdbId, tvdbEpisodeNumber: episode })
 
   if (episodeExists) return
 
