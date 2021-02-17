@@ -8,7 +8,8 @@
     "start": "node -r dotenv/config -r ./tsconfig-paths-bootstrap.js dist/index.js",
     "dev": "nodemon --config nodemon.json src/index.ts",
     "clean": "node scripts/clean.js",
-    "postinstall": "yarn build"
+    "postinstall": "yarn build",
+    "deduplicate": "node -r dotenv/config scripts/deduplicate.js"
   },
   "dependencies": {
     "@types/cron": "^1.7.2",
@@ -26,7 +27,6 @@
     "mongoose": "^5.11.15",
     "multer": "^1.4.2",
     "node-fetch": "^2.6.1",
-    "node-myanimelist": "^3.0.4",
     "pkce-challenge": "^2.1.0",
     "string-similarity": "^4.0.4",
     "typescript": "^4.1.3"

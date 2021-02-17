@@ -8,7 +8,8 @@ const API_URIS = {
   TOKEN: 'https://myanimelist.net/v1/oauth2/token',
   AUTHORIZE: 'https://myanimelist.net/v1/oauth2/authorize',
   UPDATE_LIST: (malId: string): string => `https://api.myanimelist.net/v2/anime/${malId}/my_list_status`,
-  ANIME_LIST: 'https://api.myanimelist.net/v2/users/@me/animelist?fields=list_status&limit=1000'
+  ANIME_LIST: 'https://api.myanimelist.net/v2/users/@me/animelist?fields=list_status&limit=1000',
+  GET_ANIME: 'https://api.myanimelist.net/v2/anime'
 }
 
 export function getLoginURI(redirectURI: string): string {
@@ -162,4 +163,47 @@ export async function getAnimeList(accessToken: string): Promise<AnimeList> {
     }),
     {} as AnimeList
   )
+}
+
+export async function getAnime(accessToken: string, anime: string, limit: number): Promise<void> {
+  const url = new URL(API_URIS.GET_ANIME)
+
+  url.searchParams.append('q', anime)
+  url.searchParams.append('limit', limit.toString())
+  url.searchParams.append(
+    'fields',
+    [
+      'id',
+      'title',
+      'alternative_titles',
+      'start_date',
+      'end_date',
+      'synopsis',
+      'media_type',
+      'my_list_status',
+      'num_episodes',
+      'start_season'
+    ].join(',')
+  )
+
+  const response = await fetch(url.href, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  })
+
+  return response.json()
+}
+
+export async function getAnimeDetails(accessToken: string, malId: string): Promise<unknown> {
+  return (
+    await fetch(
+      `https://api.myanimelist.net/v2/anime/${malId}?fields=id,episodes,title,main_picture,alternative_titles,start_date,end_date,synopsis,mean,rank,popularity,num_list_users,num_scoring_users,nsfw,created_at,updated_at,media_type,status,genres,my_list_status,num_episodes,start_season,broadcast,source,average_episode_duration,rating,pictures,background,related_anime,related_manga,recommendations,studios,statistics`,
+      {
+        headers: {
+          Authorization: 'Bearer ' + accessToken
+        }
+      }
+    )
+  ).json()
 }

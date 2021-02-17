@@ -1,4 +1,3 @@
-import { Jikan } from 'node-myanimelist'
 import { findBestMatch } from 'string-similarity'
 import { getTVDBEpisodeName } from 'api/tvdb'
 import { getStoredCredentials } from 'utils/token'
@@ -12,25 +11,11 @@ import {
   removeShow,
   removeShowEpisode
 } from 'db/uncompletedShow'
-
-export interface JikanAnimeResult {
-  mal_id: number
-  url: string
-  image_url: string
-  title: string
-  airing: boolean
-  synopsis: string
-  type: string
-  episodes: number
-  score: number
-  start_date: string
-  end_date: string
-  members: number
-  rated: string
-}
+import Jikan from 'api/jikan'
 
 async function matchAnimeEpisodes(malId: number, episodeName: string): Promise<number | null> {
-  const { episodes } = await Jikan.anime(malId).episodes()
+  const JikanInstance = Jikan.getInstance()
+  const episodes = await JikanInstance.getAnimeEpisodes(malId.toString())
 
   const everyEpisodeName = episodes.map(episode => episode.title.toLowerCase())
 
@@ -51,11 +36,9 @@ export interface AnimeResult {
 }
 
 export async function detectAnimeByTitleAndEpisode(title: string, name: string): Promise<AnimeResult | void> {
-  const { results }: { results: JikanAnimeResult[] } = await Jikan.search().anime({
-    q: title
-  })
+  const JikanInstance = Jikan.getInstance()
 
-  for (const anime of results.slice(0, 10)) {
+  for (const anime of await JikanInstance.getAnime(title)) {
     const animeEpisodeFound = await matchAnimeEpisodes(anime.mal_id, name)
 
     if (animeEpisodeFound != null) {
