@@ -153,10 +153,14 @@ export async function processUncompletedShows(): Promise<void> {
     logInfo('[MAL][LIST_UPDATE]', 'Processing', show.tvdbShowName)
     const episodesToSync = await getUncompletedTVEpisodes(show.tvdbId)
 
-    if (!episodesToSync.length) return
+    if (!episodesToSync.length) continue
 
     for (const episode of episodesToSync) {
-      await updateListFromTVDB(show.tvdbId, episode.tvdbEpisodeNumber.toString(), show.tvdbShowName, episode.viewDate)
+      try {
+        await updateListFromTVDB(show.tvdbId, episode.tvdbEpisodeNumber.toString(), show.tvdbShowName, episode.viewDate)
+      } catch (e) {
+        console.log(e)
+      }
     }
   }
 }
