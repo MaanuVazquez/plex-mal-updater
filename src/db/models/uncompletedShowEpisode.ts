@@ -2,13 +2,13 @@ import mongoose, { Document, Schema } from 'mongoose'
 
 export interface IUncompletedShowEpisode extends Document {
   tvdbId: string
-  tvdbEpisodeNumber: number
+  tvdbEpisodeName: string
   viewDate: string
 }
 
 const UncompletedShowEpisodeSchema = new Schema({
   tvdbId: String,
-  tvdbEpisodeNumber: Number,
+  tvdbEpisodeName: String,
   viewDate: String
 })
 

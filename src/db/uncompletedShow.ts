@@ -5,7 +5,7 @@ import { getDate } from 'utils'
 
 export async function addUncompletedShowEpisode(
   tvdbId: string,
-  episode: number,
+  episodeName: string,
   showTitle: string
 ): Promise<IUncompletedShowEpisode | void> {
   const uncompletedShow = await UncompletedShow.findOne({
@@ -19,14 +19,14 @@ export async function addUncompletedShowEpisode(
     newUncompletedShow.save()
   }
 
-  const episodeExists = await UncompletedShowEpisode.findOne({ tvdbId, tvdbEpisodeNumber: episode })
+  const episodeExists = await UncompletedShowEpisode.findOne({ tvdbId, tvdbEpisodeName: episodeName })
 
   if (episodeExists) return
 
   const uncompletedShowEpisode = new UncompletedShowEpisode()
 
   uncompletedShowEpisode.tvdbId = tvdbId
-  uncompletedShowEpisode.tvdbEpisodeNumber = episode
+  uncompletedShowEpisode.tvdbEpisodeName = episodeName
   uncompletedShowEpisode.viewDate = getDate()
 
   return uncompletedShowEpisode.save()
@@ -45,6 +45,6 @@ export async function removeShow(tvdbId: string): Promise<void> {
   await UncompletedShow.deleteOne({ tvdbId })
 }
 
-export async function removeShowEpisode(tvdbId: string, tvdbEpisodeNumber: number): Promise<void> {
-  await UncompletedShowEpisode.deleteOne({ tvdbId, tvdbEpisodeNumber })
+export async function removeShowEpisode(tvdbId: string, tvdbEpisodeName: string): Promise<void> {
+  await UncompletedShowEpisode.deleteOne({ tvdbId, tvdbEpisodeName })
 }

@@ -1,5 +1,4 @@
 import { findBestMatch } from 'string-similarity'
-import { getTVDBEpisodeName } from 'api/tvdb'
 import { getStoredCredentials } from 'utils/token'
 import { AnimeListStatus, getAnimeList, updateList } from 'api/mal'
 import { logError, logInfo } from 'utils/log'
@@ -56,7 +55,7 @@ export async function detectAnimeByTitleAndEpisode(title: string, name: string):
 interface SyncMalParams {
   tvdb: {
     id: string
-    episodeNumber: number
+    episodeName: string
     showTitle: string
   }
   mal: {
@@ -94,21 +93,19 @@ async function syncToMAL({ mal, accessToken, tvdb, viewDate }: SyncMalParams): P
   if (isLast) {
     await removeShow(tvdb.id)
   } else {
-    await removeShowEpisode(tvdb.id, tvdb.episodeNumber)
+    await removeShowEpisode(tvdb.id, tvdb.episodeName)
   }
 
-  logInfo('[MAL][LIST_UPDATE]', tvdb.id, tvdb.showTitle, tvdb.episodeNumber.toString(), 'success')
+  logInfo('[MAL][LIST_UPDATE]', tvdb.id, tvdb.showTitle, tvdb.episodeName, 'success')
 }
 
 export async function updateListFromTVDB(
   tvdbId: string,
-  episode: string,
+  episodeName: string,
   showTitle: string,
   viewDate?: string
 ): Promise<void> {
-  const tvdbEpisodeNumber = Number(episode)
   try {
-    const episodeName = await getTVDBEpisodeName(tvdbId, episode)
     const animedDetected = await detectAnimeByTitleAndEpisode(showTitle, episodeName)
 
     if (!animedDetected) throw Error('Anime not found in MAL')
@@ -131,14 +128,14 @@ export async function updateListFromTVDB(
       },
       tvdb: {
         id: tvdbId,
-        episodeNumber: tvdbEpisodeNumber,
+        episodeName,
         showTitle
       },
       viewDate
     })
   } catch (error) {
     logError('[MAL][LIST_UPDATE]', error.message)
-    await addUncompletedShowEpisode(tvdbId, tvdbEpisodeNumber, showTitle)
+    await addUncompletedShowEpisode(tvdbId, episodeName, showTitle)
   }
 }
 
@@ -157,7 +154,7 @@ export async function processUncompletedShows(): Promise<void> {
 
     for (const episode of episodesToSync) {
       try {
-        await updateListFromTVDB(show.tvdbId, episode.tvdbEpisodeNumber.toString(), show.tvdbShowName, episode.viewDate)
+        await updateListFromTVDB(show.tvdbId, episode.tvdbEpisodeName, show.tvdbShowName, episode.viewDate)
       } catch (e) {
         console.log(e)
       }

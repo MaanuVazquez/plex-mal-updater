@@ -11,12 +11,12 @@ let currentWorkingShow: string | null = null
 export default async function ({ Metadata, event }: WebhookPayload): Promise<void> {
   if (event !== WebhookEvent.MEDIA_SCROBBLE || !plexLibraryIsValid(Metadata.librarySectionTitle)) return
 
-  const { id, episode } = parseGuidString(Metadata.guid)
+  const { id } = parseGuidString(Metadata.guid)
 
   if (currentWorkingShow) {
     if (currentWorkingShow === Metadata.guid) return
 
-    addUncompletedShowEpisode(id, Number(episode), Metadata.grandparentTitle)
+    addUncompletedShowEpisode(id, Metadata.title, Metadata.grandparentTitle)
     return
   }
 
@@ -24,7 +24,7 @@ export default async function ({ Metadata, event }: WebhookPayload): Promise<voi
 
   currentWorkingShow = Metadata.guid
 
-  await updateListFromTVDB(id, episode, Metadata.grandparentTitle)
+  await updateListFromTVDB(id, Metadata.title, Metadata.grandparentTitle)
 
   currentWorkingShow = null
 }
