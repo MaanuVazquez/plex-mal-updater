@@ -47,4 +47,9 @@ export async function removeShow(tvdbId: string): Promise<void> {
 
 export async function removeShowEpisode(tvdbId: string, tvdbEpisodeName: string): Promise<void> {
   await UncompletedShowEpisode.deleteOne({ tvdbId, tvdbEpisodeName })
+  const episodes = await getUncompletedTVEpisodes(tvdbId)
+
+  if (!episodes.length) {
+    await removeShow(tvdbId)
+  }
 }

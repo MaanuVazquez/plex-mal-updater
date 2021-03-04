@@ -90,11 +90,7 @@ async function syncToMAL({ mal, accessToken, tvdb, viewDate }: SyncMalParams): P
     ...(isLast ? { finish_date: viewDate || getDate() } : null)
   })
 
-  if (isLast) {
-    await removeShow(tvdb.id)
-  } else {
-    await removeShowEpisode(tvdb.id, tvdb.episodeName)
-  }
+  await removeShowEpisode(tvdb.id, tvdb.episodeName)
 
   logInfo('[MAL][LIST_UPDATE]', tvdb.id, tvdb.showTitle, tvdb.episodeName, 'success')
 }
